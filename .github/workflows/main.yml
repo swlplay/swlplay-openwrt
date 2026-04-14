@@ -101,8 +101,19 @@ jobs:
         echo "=== 编译工具 ==="
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
 
-        make tools/compile V=sc -j$(nproc)
+        make tools/compile -j$(nproc)
+        
+        # 清理工具中间文件
+        echo "清理工具中间文件..."
+        rm -rf build_dir/host/*
+        find build_dir -name "*.o" -delete 2>/dev/null || true
+        rm -rf tmp/
+        
+        echo "工具编译后:" >> space_usage.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> space_usage.log
 
+        df -h
+   
     - name: Generate and save config files
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
