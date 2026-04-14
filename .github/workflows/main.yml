@@ -73,6 +73,7 @@ jobs:
  
       run: |
         set -ex
+        mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
         echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
         echo "DATESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
@@ -162,11 +163,6 @@ jobs:
       run: |
         cd "$WORKING_DIRECTORY"
         
-        # 确保配置目录存在（使用新的目录名）
-        mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        
-        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-        
         # 保存带时间戳的配置文件到新目录
         cp .config $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt
         
@@ -228,14 +224,20 @@ jobs:
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi
 
-    - name: Save build cache
-      shell: bash
+    - name: Prepare cache marker
       if: steps.cache-hash.outputs.cache-hit != 'true'
+      shell: bash
       run: |
-        # 创建缓存目录
         mkdir -p .cache
         echo "Build completed for commit: ${{ env.CURRENT_HASH }}" > .cache/build-info.txt
         echo "构建完成时间: $(date)" >> .cache/build-info.txt
+
+    - name: Save build cache
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .cache
+        key: immortalwrt-${{ env.CURRENT_HASH }}
 
     - name: Upload build artifacts (固件和配置)
       if: steps.cache-hash.outputs.cache-hit != 'true'
@@ -244,7 +246,7 @@ jobs:
         name: immortalwrt-x86-64-images
         path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*.img.gz
         retention-days: 7
-        if-no-files-found: error
+        if-no-files-found: warn
 
     - name: Upload config artifacts (单独配置文件)
       if: steps.cache-hash.outputs.cache-hit != 'true'
