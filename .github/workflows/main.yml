@@ -44,6 +44,10 @@ jobs:
       shell: bash
       run: |
         git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
+        
+        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+      
+        ls -la tools/
 
     - name: Check for updates in master branch
       id: check-update
