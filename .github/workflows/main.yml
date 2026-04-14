@@ -104,7 +104,30 @@ jobs:
         
         make defconfig
 
+       - name: Generate and save config files
+      shell: bash
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      run: |
+        cd "$WORKING_DIRECTORY"
         
+        # 确保配置目录存在（使用新的目录名）
+        mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
+        
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        
+        # 保存带时间戳的配置文件到新目录
+        cp .config $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt
+        
+        # 保存最新配置文件到构建产物目录
+        mkdir -p bin/targets/$TARGET/$SUBTARGET/
+        cp .config bin/targets/$TARGET/$SUBTARGET/config-latest.txt
+        
+        # 为单独配置文件构建物创建目录
+        mkdir -p ../config-artifacts
+        cp .config ../config-artifacts/immortalwrt-x86-64-config.txt
+        
+        echo "配置文件已保存：$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt"
+     
     - name: Clean up old configs (keep last 20)
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
