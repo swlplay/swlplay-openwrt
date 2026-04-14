@@ -57,6 +57,8 @@ jobs:
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
         echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
         echo "CURRENT_HASH=$LATEST_COMMIT_HASH" >> $GITHUB_ENV
+        echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
+        echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
         echo "Latest commit hash: $LATEST_COMMIT_HASH"
 
     - name: Restore cached commit hash
@@ -75,8 +77,6 @@ jobs:
         set -ex
         mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
-        echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
-        echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
         
         # 初始化空间使用记录
         echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
@@ -125,7 +125,7 @@ jobs:
         find build_dir -name "*.o" -delete 2>/dev/null || true
         rm -rf tmp/
         
-        echo "工具链编译后:" >> GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        echo "工具链编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
 
         df -h
