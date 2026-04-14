@@ -26,9 +26,10 @@ env:
 jobs:
   check-and-build:
     runs-on: ubuntu-22.04
-    container:
-      image: debian:11-slim
-      
+    container: debian:11-slim
+    permissions:
+      contents: write
+     
     steps:
     - name: Install dependencies
       shell: bash
@@ -132,7 +133,7 @@ jobs:
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
       run: |
-        cd $CONFIG_HISTORY_DIR
+        cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
         ls -la
         
         CONFIG_COUNT=$(find . -maxdepth 1 -name 'config-*.txt' -printf 'x\n' | wc -l)
@@ -172,6 +173,6 @@ jobs:
         else
           git commit -m "Update ImmortalWrt configuration history [skip ci]"
           # 使用 token 推送
-          git push "https://$GH_TOKEN@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi
