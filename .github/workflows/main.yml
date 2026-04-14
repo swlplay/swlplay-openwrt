@@ -112,7 +112,7 @@ jobs:
         cd $CONFIG_HISTORY_DIR
         ls -la
         
-        CONFIG_COUNT=$(ls -1 config-*.txt 2>/dev/null | wc -l)
+        CONFIG_COUNT=$(find . -maxdepth 1 -name 'config-*.txt' -printf 'x\n' | wc -l)
         echo "当前配置文件数量: $CONFIG_COUNT"
         
         if [ $CONFIG_COUNT -gt 20 ]; then
