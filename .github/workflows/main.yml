@@ -94,7 +94,7 @@ jobs:
         ./scripts/feeds install -a
         ls -la
         
-        make defconfig
+        make defconfig V=sc
 
     - name: Build Tools
       run: |
