@@ -92,6 +92,11 @@ jobs:
         
         make defconfig
 
+    - name: Build Tools
+      run: |
+        echo "=== 编译工具 ==="
+        make tools/compile V=sc -j$(nproc)
+
     - name: Generate and save config files
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
