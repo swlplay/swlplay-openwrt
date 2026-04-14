@@ -77,8 +77,8 @@ jobs:
         echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
         
         # 初始化空间使用记录
-        echo "初始状态:" > space_usage.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> space_usage.log
+        echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
         
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
         # 复制预定义的配置
@@ -100,8 +100,7 @@ jobs:
       run: |
         echo "=== 编译工具 ==="
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
-
-        make tools/compile -j$(nproc)
+        make tools/compile -j2
         
         # 清理工具中间文件
         echo "清理工具中间文件..."
@@ -109,11 +108,46 @@ jobs:
         find build_dir -name "*.o" -delete 2>/dev/null || true
         rm -rf tmp/
         
-        echo "工具编译后:" >> space_usage.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> space_usage.log
+        echo "工具编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
 
         df -h
-   
+        
+    - name: Build Toolchain
+      run: |
+        echo "=== 编译工具链 ==="
+        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+        make toolchain/compile -j2 V=s
+      
+        # 清理工具链中间文件
+        echo "清理工具链中间文件..."
+        rm -rf build_dir/toolchain-*/*
+        find build_dir -name "*.o" -delete 2>/dev/null || true
+        rm -rf tmp/
+        
+        echo "工具链编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+
+        df -h
+            
+    - name: Build Kernel
+      run: |
+        echo "=== 编译内核 ==="
+        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+        make target/linux/compile -j2 V=s
+        
+        # 清理内核中间文件
+        echo "清理内核中间文件..."
+        find build_dir/target-*/linux-* -name "*.o" -delete
+        find build_dir/target-*/linux-* -name ".*.cmd" -delete
+        find build_dir/target-*/linux-* -name "*.ko" -delete 2>/dev/null || true
+        rm -rf tmp/
+        
+        echo "内核编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage.log
+    
+        df -h
+           
     - name: Generate and save config files
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
