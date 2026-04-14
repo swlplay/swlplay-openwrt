@@ -309,7 +309,7 @@ jobs:
         else
           git commit -m "Update ImmortalWrt configuration history [skip ci]"
           # 使用 token 推送
-          git push "https://$GH_TOKEN@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
+          git push "https://$GH_TOKEN@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi  
         
