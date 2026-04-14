@@ -99,6 +99,8 @@ jobs:
     - name: Build Tools
       run: |
         echo "=== 编译工具 ==="
+        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+
         make tools/compile V=sc -j$(nproc)
 
     - name: Generate and save config files
