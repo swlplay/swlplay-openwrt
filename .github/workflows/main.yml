@@ -76,11 +76,11 @@ jobs:
         mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
         echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
-        echo "DATESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+        echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
         
         # 初始化空间使用记录
-        echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
+        echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
         # 复制预定义的配置
@@ -108,8 +108,8 @@ jobs:
         find build_dir -name "*.o" -delete 2>/dev/null || true
         rm -rf tmp/
         
-        echo "工具编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
+        echo "工具编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
 
         df -h
         
@@ -125,8 +125,8 @@ jobs:
         find build_dir -name "*.o" -delete 2>/dev/null || true
         rm -rf tmp/
         
-        echo "工具链编译后:" >> GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
+        echo "工具链编译后:" >> GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
 
         df -h
             
@@ -143,8 +143,8 @@ jobs:
         find build_dir/target-*/linux-* -name "*.ko" -delete 2>/dev/null || true
         rm -rf tmp/
         
-        echo "内核编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
+        echo "内核编译后:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
     
         df -h
     - name: Build Packages in Batches
@@ -153,8 +153,8 @@ jobs:
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
         make -j2
 
-        echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$DATESTAMP.log
+        echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
+        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
     
         df -h
     - name: Generate and save config files
