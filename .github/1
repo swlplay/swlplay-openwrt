@@ -96,7 +96,9 @@ jobs:
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
         
         ls -la
-                
+        
+        make defconfig
+        
         echo "开始更新feeds..."
         ./scripts/feeds update -a
         ./scripts/feeds install -a
@@ -107,7 +109,8 @@ jobs:
     - name: Build Tools
       run: |
         echo "=== 编译工具 ==="
-        make tools/compile V=sc -j$(nproc)
+        make tools/compile -j2 V=s
+        make tools/install -j2 V=s
         
         # 清理工具中间文件
         echo "清理工具中间文件..."
