@@ -40,20 +40,12 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Clone ImmortalWrt master branch
-      shell: bash
-      run: |
-        git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
-        
-        cd $GITHUB_WORKSPACE/immortalwrt-x86/
-      
-        ls -la tools/
-
     - name: Check for updates in master branch
       id: check-update
       shell: bash
       run: |
-        cd "$WORKING_DIRECTORY"
+        df -h        
+        git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
         echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
         echo "CURRENT_HASH=$LATEST_COMMIT_HASH" >> $GITHUB_ENV
@@ -72,11 +64,10 @@ jobs:
 
     - name: Build ImmortalWrt if source updated
       shell: bash
- 
       run: |
         set -ex
         mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
         
         # 初始化空间使用记录
         echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
@@ -93,6 +84,8 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         ls -la
+
+        df -h
         
         make defconfig
 
