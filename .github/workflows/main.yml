@@ -52,18 +52,8 @@ jobs:
     - name: Install dependencies
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-             bash git curl ca-certificates \
-             build-essential flex bison patch \
-             libncurses-dev libssl-dev \
-             python3 python3-dev \
-             rsync unzip wget file bc \
-             libelf-dev gawk gettext \
-             autoconf automake binutils bzip2 libtool \
-             squashfs-tools \
-             genisoimage \
-             xz-utils autoconf automake
+       sudo apt update
+       sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
           
     - name: Checkout repository
       uses: actions/checkout@v4
