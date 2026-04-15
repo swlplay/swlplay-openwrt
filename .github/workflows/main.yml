@@ -44,7 +44,8 @@ jobs:
       id: check-update
       shell: bash
       run: |
-        df -h        
+        df -h
+        git config --global --add safe.directory '*'       
         git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
         echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
@@ -144,11 +145,7 @@ jobs:
         cd "$GITHUB_WORKSPACE"
         echo "工作目录内容:"
         ls -la
-       
-        # 添加当前工作目录为安全目录
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git config --global --add safe.directory "$GITHUB_WORKSPACE/.git"
-        
+               
         # 配置 Git
         git config user.email "swlplay@gmail.com"
         git config user.name "swlplay"
