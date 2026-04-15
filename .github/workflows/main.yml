@@ -33,18 +33,6 @@ jobs:
     - name: 释放前查看磁盘空间
       run: df -h
 
-    - name: 手动删除额外工具缓存并清理 apt 缓存
-      run: |
-        echo "删除 /opt/hostedtoolcache ..."
-        sudo rm -rf /opt/hostedtoolcache
-        echo "删除其他大目录 ..."
-        sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
-        echo "清理 apt 缓存 ..."
-        sudo apt-get clean
-        sudo apt-get autoclean
-        sudo apt-get autoremove --purge -y
-        docker system prune -a -f
-
     - name: 释放磁盘空间 (easimon/maximize-build-space)
       uses: easimon/maximize-build-space@master
       with:
