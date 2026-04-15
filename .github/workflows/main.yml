@@ -68,7 +68,8 @@ jobs:
       run: |
         set -ex
         mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
+         
         # 初始化空间使用记录
         echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
