@@ -75,7 +75,7 @@ jobs:
              autoconf automake binutils bzip2 libtool \
              squashfs-tools \
              genisoimage \
-             xz-utils
+             xz-utils autoconf automake
           
     - name: Checkout repository
       uses: actions/checkout@v4
