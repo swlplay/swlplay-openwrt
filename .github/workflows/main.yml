@@ -68,28 +68,28 @@ jobs:
       run: |
         set -ex
         mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
         
         # 初始化空间使用记录
         echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         
-        echo "配置编译目标为 $TARGET/$SUBTARGET..."
-        # 复制预定义的配置
-        cd $GITHUB_WORKSPACE/config-x86-64-history/
-        ls -la
-        cp .config $GITHUB_WORKSPACE/immortalwrt-x86/.config
-        cd $GITHUB_WORKSPACE/immortalwrt-x86/
-                       
         echo "开始更新feeds..."
         ./scripts/feeds update -a
         ./scripts/feeds install -a
+
+        echo "配置编译目标为 $TARGET/$SUBTARGET..."
+        # 复制预定义的配置
+        cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/
+        ls -la
+
+        cp .config $GITHUB_WORKSPACE/$WORKING_DIRECTORY/.config
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/                       
+        ls -la
+        
+        make defconfig
         ls -la
 
         df -h
-        
-        make defconfig
-
     - name: Build Packages in Batches
       run: |
         echo "=== 整体编译 ==="
