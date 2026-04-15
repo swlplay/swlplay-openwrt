@@ -24,9 +24,12 @@ env:
   CONFIG_HISTORY_DIR: config-x86-64-history  # 新增配置历史目录变量
 
 jobs:
-  cleanup:
-    runs-on: ubuntu-22.04
-    steps:
+ check-and-build:
+  runs-on: ubuntu-22.04
+  permissions:
+    contents: write          # ← 保留在这里
+
+  steps:
     - name: 释放前查看磁盘空间
       run: df -h
 
@@ -38,19 +41,14 @@ jobs:
         remove-haskell: 'true'
         remove-codeql: 'true'
         remove-docker-images: 'true'
-
     - name: 释放后查看磁盘空间
       run: df -h
 
-  check-and-build:
-    runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/openwrt/buildbot/buildworker-v3.8.0:v9
-      options: --user root 
-    permissions:
-      contents: write
-     
-    steps:        
+    - name: 安装编译依赖
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
+    
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
