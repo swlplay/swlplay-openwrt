@@ -128,7 +128,7 @@ jobs:
       run: |
         echo "=== 整体编译 ==="
         cd $GITHUB_WORKSPACE/immortalwrt-x86/
-        make -j2 V=sc
+        make -j1 V=sc
 
         echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
