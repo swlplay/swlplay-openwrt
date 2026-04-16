@@ -61,168 +61,142 @@ jobs:
     - name: 释放后查看磁盘空间
       run: df -h
 
-    - name: 安装编译依赖
-      run: |
-        sudo apt update
-        sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
-    
+    # Checkout 仓库（宿主机）
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        # 确保拉取所有分支和历史，以便后续推送
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Check for updates in master branch
-      id: check-update
-      shell: bash
-      run: |
-        df -h
-        git config --global --add safe.directory '*'       
-        git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
-        LATEST_COMMIT_HASH=$(git rev-parse HEAD)
-        echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
-        echo "CURRENT_HASH=$LATEST_COMMIT_HASH" >> $GITHUB_ENV
-        echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
-        echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
-        echo "Latest commit hash: $LATEST_COMMIT_HASH"
 
-    - name: Restore cached commit hash
-      id: cache-hash
-      uses: actions/cache@v4
+    # 准备环境变量文件（供容器内读取）
+    - name: Prepare environment for container
+      run: |
+        echo "TARGET=${{ env.TARGET }}" > /tmp/build.env
+        echo "SUBTARGET=${{ env.SUBTARGET }}" >> /tmp/build.env
+        echo "WORKING_DIRECTORY=${{ env.WORKING_DIRECTORY }}" >> /tmp/build.env
+        echo "CONFIG_HISTORY_DIR=${{ env.CONFIG_HISTORY_DIR }}" >> /tmp/build.env
+        echo "GITHUB_WORKSPACE=${{ github.workspace }}" >> /tmp/build.env
+
+    # 在容器中执行编译（所有编译步骤打包）
+    - name: Build ImmortalWrt inside container
+      uses: docker://ghcr.io/openwrt/buildbot/buildworker-v3.8.0:v9
       with:
-        path: .cache
-        key: immortalwrt-${{ env.CURRENT_HASH }}
-        restore-keys: |
-          immortalwrt-
+        options: --user root -v ${{ github.workspace }}:/work -v /tmp/build.env:/tmp/build.env:ro
+        run: |
+          set -ex
 
-    - name: Build ImmortalWrt if source updated
-      shell: bash
+          # 读取环境变量
+          source /tmp/build.env
+          cd /work
+
+          # 配置 git 安全目录
+          git config --global --add safe.directory '*'
+
+          # 克隆源码（浅克隆节省空间）
+          git clone -b master --single-branch --depth=1 https://github.com/immortalwrt/immortalwrt ${WORKING_DIRECTORY}
+          cd ${WORKING_DIRECTORY}
+
+          # 获取最新 commit hash 并保存到 /work/commit_info.env（供宿主机后续步骤使用）
+          LATEST_COMMIT_HASH=$(git rev-parse HEAD)
+          echo "CURRENT_HASH=$LATEST_COMMIT_HASH" > /work/commit_info.env
+          echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> /work/commit_info.env
+          echo "FORCE_UNSAFE_CONFIGURE=1" >> /work/commit_info.env
+
+          # 更新 feeds
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+          # 复制预定义配置文件（假设在仓库的 $CONFIG_HISTORY_DIR/.config）
+          cp /work/${CONFIG_HISTORY_DIR}/.config .config
+          ls -la
+
+          # 配置编译
+          make defconfig
+          ls -la
+
+          # 记录初始空间使用
+          mkdir -p /work/${CONFIG_HISTORY_DIR}
+          du -sh . > /work/${CONFIG_HISTORY_DIR}/space_usage-${TIMESTAMP}.log
+          df -h
+
+          # 编译（使用 -j2）
+          make -j2 V=sc
+
+          # 记录编译后空间使用
+          du -sh . >> /work/${CONFIG_HISTORY_DIR}/space_usage-${TIMESTAMP}.log
+          df -h
+
+          # 创建产物目录（挂载点下）
+          mkdir -p /work/artifacts
+          # 复制固件
+          cp bin/targets/${TARGET}/${SUBTARGET}/*.img.gz /work/artifacts/ || true
+          # 复制配置文件历史
+          cp .config /work/${CONFIG_HISTORY_DIR}/config-${TIMESTAMP}.txt
+          # 复制最新配置到产物
+          cp .config /work/artifacts/config-latest.txt
+          # 复制空间日志
+          cp /work/${CONFIG_HISTORY_DIR}/space_usage-${TIMESTAMP}.log /work/artifacts/
+
+    # 读取容器中生成的 commit 信息到环境变量
+    - name: Load commit info from container
+      id: load_info
       run: |
-        set -ex
-        mkdir -p $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
-         
-        # 初始化空间使用记录
-        echo "初始状态:" > $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
-        
-        echo "开始更新feeds..."
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        if [ -f commit_info.env ]; then
+          cat commit_info.env >> $GITHUB_ENV
+          cat commit_info.env
+        else
+          echo "WARNING: commit_info.env not found"
+        fi
 
-        echo "配置编译目标为 $TARGET/$SUBTARGET..."
-        # 复制预定义的配置
-        cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/
-        ls -la
-
-        cp .config $GITHUB_WORKSPACE/$WORKING_DIRECTORY/.config
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/                       
-        ls -la
-        
-        make defconfig
-        ls -la
-
-        df -h
-    - name: Build Packages in Batches
-      run: |
-        echo "=== 整体编译 ==="
-        cd $GITHUB_WORKSPACE/immortalwrt-x86/
-        make -j2 V=sc
-
-        echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
-        du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
-    
-        df -h
+    # 后续步骤：生成配置文件、清理旧配置、提交、缓存、上传等（宿主机）
     - name: Generate and save config files
       shell: bash
-      if: steps.cache-hash.outputs.cache-hit != 'true'
       run: |
         cd "$WORKING_DIRECTORY"
-        
-        # 保存带时间戳的配置文件到新目录
+        # 确保配置文件已存在（容器内已复制）
         cp .config $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt
-        
-        # 保存最新配置文件到构建产物目录
         mkdir -p bin/targets/$TARGET/$SUBTARGET/
         cp .config bin/targets/$TARGET/$SUBTARGET/config-latest.txt
-        
-        # 为单独配置文件构建物创建目录
         mkdir -p ../config-artifacts
         cp .config ../config-artifacts/immortalwrt-x86-64-config.txt
-        
         echo "配置文件已保存：$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt"
-     
+
     - name: Clean up old configs (keep last 20)
       shell: bash
-      if: steps.cache-hash.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR
-        ls -la
-        
         CONFIG_COUNT=$(find . -maxdepth 1 -name 'config-*.txt' -printf 'x\n' | wc -l)
         echo "当前配置文件数量: $CONFIG_COUNT"
-        
         if [ $CONFIG_COUNT -gt 20 ]; then
           ls -1t config-*.txt | tail -n +21 | xargs -r rm -f
           echo "已清理旧配置文件，保留最新的20个"
-          echo "删除了 $((CONFIG_COUNT - 20)) 个旧配置文件"
         else
-          echo "配置文件数量不足20个（当前 $CONFIG_COUNT 个），跳过清理"
-        fi        
-    
+          echo "配置文件数量不足20个，跳过清理"
+        fi
+
     - name: Commit config files to repository
       shell: bash
-      if: steps.cache-hash.outputs.cache-hit != 'true'
       run: |
-        # 切换回仓库根目录
         cd "$GITHUB_WORKSPACE"
-        echo "工作目录内容:"
-        ls -la
-               
-        # 配置 Git
         git config user.email "swlplay@gmail.com"
         git config user.name "swlplay"
-        
-        # 添加配置目录（使用新的目录名）
         git add "$CONFIG_HISTORY_DIR/"
-        
-        # 只在有变化时提交
         if git diff --staged --quiet; then
           echo "配置文件无变化，跳过提交"
         else
           git commit -m "Update ImmortalWrt configuration history [skip ci]"
-          # 使用 token 推送
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
-          echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi
 
-    - name: Prepare cache marker
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        mkdir -p .cache
-        echo "Build completed for commit: ${{ env.CURRENT_HASH }}" > .cache/build-info.txt
-        echo "构建完成时间: $(date)" >> .cache/build-info.txt
-
-    - name: Save build cache
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: .cache
-        key: immortalwrt-${{ env.CURRENT_HASH }}
-
     - name: Upload build artifacts (固件和配置)
-      if: steps.cache-hash.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: immortalwrt-x86-64-images
-        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*.img.gz
+        path: artifacts/*.img.gz
         retention-days: 7
         if-no-files-found: warn
 
     - name: Upload config artifacts (单独配置文件)
-      if: steps.cache-hash.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: immortalwrt-x86-64-config
@@ -230,9 +204,8 @@ jobs:
         retention-days: 30
         if-no-files-found: error
 
-    - name: Build skipped due to cache
+    - name: Build skipped due to cache (placeholder)
       shell: bash
       if: steps.cache-hash.outputs.cache-hit == 'true'
       run: |
-        echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
-        echo "如需强制重新构建，请删除缓存或等待新的提交"
+        echo "注意：缓存逻辑已简化，请检查实际构建状态"
