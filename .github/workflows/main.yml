@@ -81,8 +81,7 @@ jobs:
     - name: Build ImmortalWrt inside container
       uses: docker://ghcr.io/openwrt/buildbot/buildworker-v3.8.0:v9
       with:
-        options: --user root -v ${{ github.workspace }}:/work -e "BUILDWORKER_NAME=my-openwrt-builder" -e "BUILDWORKER_PASSWORD=temp-pass"    
-        options: --user root -v ${{ github.workspace }}:/work -v /tmp/build.env:/tmp/build.env:ro
+        options: --user root -v ${{ github.workspace }}:/work -v /tmp/build.env:/tmp/build.env:ro -e "BUILDWORKER_NAME=my-openwrt-builder" -e "BUILDWORKER_PASSWORD=temp-pass"
         run: |
           set -ex
 
