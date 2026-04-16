@@ -346,3 +346,6 @@ jobs:
       run: |
         echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
         echo "如需强制重新构建，请删除缓存或等待新的提交"
+
+                sudo apt update
+        sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
