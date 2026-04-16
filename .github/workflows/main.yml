@@ -1,15 +1,3 @@
-
-name: Monitor and Build ImmortalWrt (x86_64 Master)
-
-on:
-  # 定时触发：每周二18点检查更新（UTC时间）
-  schedule:
-    - cron: '0 18 * * 2'
-  
-  # 代码推送触发：推送到 master 分支时触发
-  push:
-    branches: [ master ]
-  
  
 name: Monitor and Build ImmortalWrt (x86_64 Master)
 
