@@ -59,6 +59,26 @@ jobs:
 
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
 
+    - name: 释放磁盘空间 (easimon/maximize-build-space)
+      uses: easimon/maximize-build-space@master
+      with:
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+        root-reserve-mb: 1024
+        temp-reserve-mb: 100
+        swap-size-mb: 4096
+        overprovision-lvm: false
+    
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # 确保拉取所有分支和历史，以便后续推送
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: 释放后查看磁盘空间
       run: df -h
         
@@ -100,6 +120,18 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
+        ls -la
+
+        cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/libffi/
+        ls -la
+
+        cp Makefile $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/Makefile
+        ls -la
+
+        chmod 0664 Makefile
+        ls -la
+
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
         # 复制预定义的配置
         cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/
@@ -112,12 +144,10 @@ jobs:
         make defconfig
         ls -la
 
-                 ls -la
-
     - name: Build Packages in Batches
       run: |
         echo "=== 整体编译 ==="
-        cd $GITHUB_WORKSPACE/immortalwrt-x86/
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
         make -j2 V=sc
 
         echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
