@@ -39,16 +39,6 @@ jobs:
         sudo rm -rf /opt/hostedtoolcache
         echo "删除其他大目录 ..."
         sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
-        docker system prune -a -f
-        if [ -f /usr/include/fuse3/fuse.h ]; then
-           FUSE_INCLUDE="/usr/include/fuse3"
-        elif [ -f /usr/include/fuse/fuse.h ]; then
-           FUSE_INCLUDE="/usr/include/fuse"
-        else
-           echo "fuse.h not found"
-           exit 1
-        fi
-           echo "FUSE_INCLUDE=$FUSE_INCLUDE"
     
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -62,8 +52,19 @@ jobs:
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
 
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
-        cd /usr/include/fuse
-        ls -la
+        
+        sudo apt-get update
+        sudo apt-get install -y libfuse3-dev        
+        if [ -f /usr/include/fuse3/fuse.h ]; then
+           FUSE_INCLUDE="/usr/include/fuse3"
+        elif [ -f /usr/include/fuse/fuse.h ]; then
+           FUSE_INCLUDE="/usr/include/fuse"
+        else
+           echo "fuse.h not found"
+           exit 1
+        fi
+           echo "FUSE_INCLUDE=$FUSE_INCLUDE"
+           
     - name: 释放后查看磁盘空间
       run: df -h
         
