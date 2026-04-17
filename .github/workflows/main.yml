@@ -40,8 +40,15 @@ jobs:
         echo "删除其他大目录 ..."
         sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
         docker system prune -a -f
-        cd /usr/include/fuse
-        ls -la
+        if [ -f /usr/include/fuse3/fuse.h ]; then
+           FUSE_INCLUDE="/usr/include/fuse3"
+        elif [ -f /usr/include/fuse/fuse.h ]; then
+           FUSE_INCLUDE="/usr/include/fuse"
+        else
+           echo "fuse.h not found"
+           exit 1
+        fi
+           echo "FUSE_INCLUDE=$FUSE_INCLUDE"
     
     - name: Checkout repository
       uses: actions/checkout@v4
