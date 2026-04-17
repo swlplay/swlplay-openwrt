@@ -53,7 +53,7 @@ define Package/openlist2
   SUBMENU:=Web Servers/Proxies
   TITLE:=A file list program that supports multiple storage
   URL:=https://openlist.team/
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle +libfuse
 endef
 
 define Package/openlist2/conffiles
@@ -82,13 +82,6 @@ define Build/Prepare
 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/public/dist -xzf $(DL_DIR)/openlist-frontend-dist-lite-v$(PKG_WEB_VERSION).tar.gz
 	$(SED) 's_https://res.oplist.org/logo_/assets_g' $(PKG_BUILD_DIR)/public/dist/index.html
 	$(SED) 's_https://res.oplist.org/logo_/assets_g' $(PKG_BUILD_DIR)/public/dist/static/manifest.json
-endef
-
-define Build/Compile
-    (cd $(PKG_BUILD_DIR); \
-        CGO_CFLAGS="-I/usr/include/fuse3" \
-        $(call GoPackage/Build/Compile) \
-    )
 endef
 
 define Package/openlist2/install
