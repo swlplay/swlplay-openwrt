@@ -58,27 +58,7 @@ jobs:
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
 
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
-
-    - name: 释放磁盘空间 (easimon/maximize-build-space)
-      uses: easimon/maximize-build-space@master
-      with:
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-codeql: 'true'
-        remove-docker-images: 'true'
-        root-reserve-mb: 1024
-        temp-reserve-mb: 100
-        swap-size-mb: 4096
-        overprovision-lvm: false
     
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        # 确保拉取所有分支和历史，以便后续推送
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: 释放后查看磁盘空间
       run: df -h
         
