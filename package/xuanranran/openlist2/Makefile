@@ -84,6 +84,13 @@ define Build/Prepare
 	$(SED) 's_https://res.oplist.org/logo_/assets_g' $(PKG_BUILD_DIR)/public/dist/static/manifest.json
 endef
 
+define Build/Compile
+    (cd $(PKG_BUILD_DIR); \
+        CGO_CFLAGS="-I/usr/include/fuse3" \
+        $(call GoPackage/Build/Compile) \
+    )
+endef
+
 define Package/openlist2/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin
