@@ -106,10 +106,13 @@ jobs:
         cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/libffi/
         ls -la
 
+        chmod 0664 Makefile
+        ls -la
+
         cp Makefile $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/Makefile
         ls -la
 
-        chmod 0664 Makefile
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
         ls -la
 
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
