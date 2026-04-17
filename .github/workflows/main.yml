@@ -40,6 +40,8 @@ jobs:
         echo "删除其他大目录 ..."
         sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
         docker system prune -a -f
+        cd /usr/include/fuse
+        ls -la
     
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -53,7 +55,8 @@ jobs:
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
 
         sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
-    
+        cd /usr/include/fuse
+        ls -la
     - name: 释放后查看磁盘空间
       run: df -h
         
