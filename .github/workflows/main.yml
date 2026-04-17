@@ -93,7 +93,10 @@ jobs:
         
         echo "开始更新feeds..."
         ./scripts/feeds update -a
+
         ./scripts/feeds install -a
+        
+        ./scripts/feeds uninstall ddns-go smartdns qBittorrent-Enhanced-Edition luci-app-smartdns luci-app-openclash luci-app-qbittorrent luci-app-unblockneteasemusic luci-app-ddns-go
 
         cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
         ls -la
@@ -106,8 +109,6 @@ jobs:
 
         cp -r $GITHUB_WORKSPACE/package/* $GITHUB_WORKSPACE/$WORKING_DIRECTORY/package/feeds/
         
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/
-        ls -la
 
         cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
         ls -la
@@ -122,6 +123,9 @@ jobs:
         ls -la
         
         make defconfig
+        ls -la
+        
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/package/feeds/
         ls -la
 
     - name: Build Packages in Batches
