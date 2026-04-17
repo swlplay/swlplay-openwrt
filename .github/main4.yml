@@ -39,6 +39,10 @@ jobs:
         sudo rm -rf /opt/hostedtoolcache
         echo "删除其他大目录 ..."
         sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+        echo "清理 apt 缓存 ..."
+        sudo apt-get clean
+        sudo apt-get autoclean
+        sudo apt-get autoremove --purge -y
         docker system prune -a -f
     
     - name: Checkout repository
@@ -47,6 +51,7 @@ jobs:
         # 确保拉取所有分支和历史，以便后续推送
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
+
 
     - name: 安装编译依赖
       run: |
@@ -104,12 +109,10 @@ jobs:
         cp Makefile $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/Makefile
         ls -la
 
-        cp -r $GITHUB_WORKSPACE/package/* $GITHUB_WORKSPACE/$WORKING_DIRECTORY/package/feeds/
-        
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/
+        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
         ls -la
 
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
+        chmod 0664 Makefile
         ls -la
 
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
@@ -128,53 +131,12 @@ jobs:
       run: |
         echo "=== 整体编译 ==="
         cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/
-        make -j2 V=sc
+        make -j1 V=sc
 
         echo "整体编译:" >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
         du -sh . | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/space_usage-$TIMESTAMP.log
     
         df -h
-
-    - name: Prepare cache marker
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        mkdir -p .cache
-        echo "Build completed for commit: ${{ env.CURRENT_HASH }}" > .cache/build-info.txt
-        echo "构建完成时间: $(date)" >> .cache/build-info.txt
-
-    - name: Save build cache
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: .cache
-        key: immortalwrt-${{ env.CURRENT_HASH }}
-
-    - name: Upload build artifacts (固件和配置)
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: immortalwrt-x86-64-images
-        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*.img.gz
-        retention-days: 7
-        if-no-files-found: warn
-
-    - name: Upload config artifacts (单独配置文件)
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: immortalwrt-x86-64-config
-        path: config-artifacts/
-        retention-days: 30
-        if-no-files-found: error
-
-    - name: Build skipped due to cache
-      shell: bash
-      if: steps.cache-hash.outputs.cache-hit == 'true'
-      run: |
-        echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
-        echo "如需强制重新构建，请删除缓存或等待新的提交"
-
     - name: Generate and save config files
       shell: bash
       if: steps.cache-hash.outputs.cache-hit != 'true'
@@ -225,9 +187,6 @@ jobs:
         git config user.email "swlplay@gmail.com"
         git config user.name "swlplay"
         
-        # 先拉取远程更改（避免冲突）
-        git pull --rebase origin main
-        
         # 添加配置目录（使用新的目录名）
         git add "$CONFIG_HISTORY_DIR/"
         
@@ -240,3 +199,43 @@ jobs:
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi
+
+    - name: Prepare cache marker
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p .cache
+        echo "Build completed for commit: ${{ env.CURRENT_HASH }}" > .cache/build-info.txt
+        echo "构建完成时间: $(date)" >> .cache/build-info.txt
+
+    - name: Save build cache
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .cache
+        key: immortalwrt-${{ env.CURRENT_HASH }}
+
+    - name: Upload build artifacts (固件和配置)
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-x86-64-images
+        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*.img.gz
+        retention-days: 7
+        if-no-files-found: warn
+
+    - name: Upload config artifacts (单独配置文件)
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-x86-64-config
+        path: config-artifacts/
+        retention-days: 30
+        if-no-files-found: error
+
+    - name: Build skipped due to cache
+      shell: bash
+      if: steps.cache-hash.outputs.cache-hit == 'true'
+      run: |
+        echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
+        echo "如需强制重新构建，请删除缓存或等待新的提交"
