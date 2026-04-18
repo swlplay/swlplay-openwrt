@@ -61,7 +61,7 @@ jobs:
       shell: bash
       run: |
         git config --global --add safe.directory '*'       
-        git clone -b master --single-branch https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
+        git clone -b master --single-branch https://github.com/immortalwrt/immortalwrt
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
         echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
         echo "CURRENT_HASH=$LATEST_COMMIT_HASH" >> $GITHUB_ENV
