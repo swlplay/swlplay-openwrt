@@ -20,7 +20,7 @@ on:
 env:
   TARGET: x86
   SUBTARGET: 64
-  WORKING_DIRECTORY: immortalwrt-x86
+  WORKING_DIRECTORY: immortalwrt
   CONFIG_HISTORY_DIR: config-x86-64-history  # 新增配置历史目录变量
 
 jobs:
@@ -61,7 +61,7 @@ jobs:
       shell: bash
       run: |
         git config --global --add safe.directory '*'       
-        git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
+        git clone -b master --single-branch https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
         echo "latest_commit=$LATEST_COMMIT_HASH" >> $GITHUB_OUTPUT
         echo "CURRENT_HASH=$LATEST_COMMIT_HASH" >> $GITHUB_ENV
