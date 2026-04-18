@@ -49,8 +49,9 @@ jobs:
 
     - name: 安装编译依赖
       run: |
-        sudo apt update
-        sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
+        sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
+        sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
            
     - name: 编译依赖按装后磁盘空间
       run: df -h
@@ -222,7 +223,7 @@ jobs:
         if git diff --staged --quiet; then
           echo "配置文件无变化，跳过提交"
         else
-          git commit -m "Update ImmortalWrt configuration history [skip ci]"
+          git commit -m "Update R86S-ImmortalWrt [skip ci]"
           # 使用 token 推送
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
@@ -232,7 +233,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         # 精确匹配以 squashfs-combined-efi.img.gz 结尾的文件
-        tag_name: x86_64-nightly
+        tag_name: R86S-nightly
         files: |
           ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*squashfs-combined-efi.img.gz
       env:
