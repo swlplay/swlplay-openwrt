@@ -49,30 +49,16 @@ jobs:
 
     - name: 安装编译依赖
       run: |
-        sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
-
-        sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
-        
-        sudo apt-get update
-        sudo apt-get install -y libfuse3-dev        
-        if [ -f /usr/include/fuse3/fuse.h ]; then
-           FUSE_INCLUDE="/usr/include/fuse3"
-        elif [ -f /usr/include/fuse/fuse.h ]; then
-           FUSE_INCLUDE="/usr/include/fuse"
-        else
-           echo "fuse.h not found"
-           exit 1
-        fi
-           echo "FUSE_INCLUDE=$FUSE_INCLUDE"
+        sudo apt update
+        sudo apt install -y build-essential libncurses5-dev gawk git gettext libssl-dev zlib1g-dev ccache unzip python3 perl
            
-    - name: 释放后查看磁盘空间
+    - name: 编译依赖按装后磁盘空间
       run: df -h
         
     - name: Check for updates in master branch
       id: check-update
       shell: bash
       run: |
-        df -h
         git config --global --add safe.directory '*'       
         git clone -b master --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt $WORKING_DIRECTORY
         LATEST_COMMIT_HASH=$(git rev-parse HEAD)
