@@ -158,37 +158,14 @@ jobs:
         echo "Build completed for commit: ${{ env.CURRENT_HASH }}" > .cache/build-info.txt
         echo "构建完成时间: $(date)" >> .cache/build-info.txt
 
-    - name: Save build cache
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: .cache
-        key: immortalwrt-${{ env.CURRENT_HASH }}
-
     - name: Upload build artifacts (固件和配置)
       if: steps.cache-hash.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: immortalwrt-x86-64-images
-        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*.img.gz
+        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*squashfs-combined-efi.img.gz
         retention-days: 7
         if-no-files-found: warn
-
-    - name: Upload config artifacts (单独配置文件)
-      if: steps.cache-hash.outputs.cache-hit != 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: immortalwrt-x86-64-config
-        path: config-artifacts/
-        retention-days: 30
-        if-no-files-found: error
-
-    - name: Build skipped due to cache
-      shell: bash
-      if: steps.cache-hash.outputs.cache-hit == 'true'
-      run: |
-        echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
-        echo "如需强制重新构建，请删除缓存或等待新的提交"
 
     - name: Generate and save config files
       shell: bash
@@ -208,6 +185,15 @@ jobs:
         cp .config ../config-artifacts/immortalwrt-x86-64-config.txt
         
         echo "配置文件已保存：$CONFIG_HISTORY_DIR/config-$TIMESTAMP.txt"
+
+    - name: Upload config artifacts (单独配置文件)
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-x86-64-config
+        path: config-artifacts/
+        retention-days: 30
+        if-no-files-found: error
      
     - name: Clean up old configs (keep last 20)
       shell: bash
@@ -255,3 +241,27 @@ jobs:
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "配置文件已提交到仓库的 $CONFIG_HISTORY_DIR 目录"
         fi
+
+   - name: Upload squashfs-combined-efi firmware to Release
+     uses: softprops/action-gh-release@v2
+     with:
+       # 精确匹配以 squashfs-combined-efi.img.gz 结尾的文件
+       files: |
+         ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*squashfs-combined-efi.img.gz
+     env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+
+   - name: Build skipped due to cache
+      shell: bash
+      if: steps.cache-hash.outputs.cache-hit == 'true'
+      run: |
+        echo "构建已跳过 - 提交 ${{ env.CURRENT_HASH }} 之前已经构建过"
+        echo "如需强制重新构建，请删除缓存或等待新的提交"
+
+    - name: Save build cache
+      if: steps.cache-hash.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .cache
+        key: immortalwrt-${{ env.CURRENT_HASH }}
+
