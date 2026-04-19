@@ -93,6 +93,7 @@ jobs:
     outputs:
       commit_hash: ${{ steps.get_commit_hash.outputs.hash }}
       feeds_hash: ${{ steps.feeds_hash.outputs.hash }}
+      timestamp: ${{ steps.set_timestamp.outputs.timestamp }}
     steps:
       - name: 释放磁盘空间
         run: df -h
@@ -109,8 +110,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 设置时间戳和当前哈希环境变量
+        id: set_timestamp
         run: |
-          echo "TIMESTAMP=R86S-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+          TS="R86S-$(date +%Y%m%d-%H%M%S)"
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          echo "TIMESTAMP=$TS" >> $GITHUB_ENV
           echo "FORCE_UNSAFE_CONFIGURE=1" >> $GITHUB_ENV
 
       - name: 安装编译依赖
@@ -128,13 +132,10 @@ jobs:
       - name: 修复脚本和工具的可执行权限（源码准备后）
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          # 给所有 .sh 文件添加执行权限
           find . -name "*.sh" -exec chmod +x {} \;
-          # 给 scripts 目录下的所有文件添加执行权限
           if [ -d scripts ]; then
             chmod +x scripts/* 2>/dev/null || true
           fi
-          # 如果 staging_dir/host/bin 已存在，也添加权限
           if [ -d staging_dir/host/bin ]; then
             chmod +x staging_dir/host/bin/* 2>/dev/null || true
           fi
@@ -240,11 +241,34 @@ jobs:
     if: needs.check-upstream.outputs.changed == 'true'
     timeout-minutes: 300
     steps:
+      - name: 释放磁盘空间
+        run: df -h
+      - name: 清理无用工具缓存
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+
+      - name: Checkout 仓库（获取 init_build_environment.sh）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装编译依赖
+        run: |
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
         with:
           name: openwrt-source
           path: ${{ env.WORKING_DIRECTORY }}
+
+      - name: 设置 CURRENT_HASH 环境变量
+        run: echo "CURRENT_HASH=${{ needs.update-feeds.outputs.commit_hash }}" >> $GITHUB_ENV
+      - name: 设置 TIMESTAMP 环境变量
+        run: echo "TIMESTAMP=${{ needs.update-feeds.outputs.timestamp }}" >> $GITHUB_ENV
 
       - name: 恢复 LLVM BPF 缓存
         id: cache-llvm-bpf
@@ -292,11 +316,34 @@ jobs:
     if: needs.check-upstream.outputs.changed == 'true'
     timeout-minutes: 300
     steps:
+      - name: 释放磁盘空间
+        run: df -h
+      - name: 清理无用工具缓存
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+
+      - name: Checkout 仓库（获取 init_build_environment.sh）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装编译依赖
+        run: |
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
         with:
           name: openwrt-source
           path: ${{ env.WORKING_DIRECTORY }}
+
+      - name: 设置 CURRENT_HASH 环境变量
+        run: echo "CURRENT_HASH=${{ needs.update-feeds.outputs.commit_hash }}" >> $GITHUB_ENV
+      - name: 设置 TIMESTAMP 环境变量
+        run: echo "TIMESTAMP=${{ needs.update-feeds.outputs.timestamp }}" >> $GITHUB_ENV
 
       - name: 恢复 LLVM BPF 缓存
         id: cache-llvm-bpf
@@ -368,6 +415,24 @@ jobs:
     if: needs.check-upstream.outputs.changed == 'true'
     timeout-minutes: 360
     steps:
+      - name: 释放磁盘空间
+        run: df -h
+      - name: 清理无用工具缓存
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+
+      - name: Checkout 仓库（获取 init_build_environment.sh）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装编译依赖
+        run: |
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
         with:
@@ -379,6 +444,11 @@ jobs:
         with:
           name: openwrt-toolchain
           path: ${{ env.WORKING_DIRECTORY }}/staging_dir/
+
+      - name: 设置 CURRENT_HASH 环境变量
+        run: echo "CURRENT_HASH=${{ needs.update-feeds.outputs.commit_hash }}" >> $GITHUB_ENV
+      - name: 设置 TIMESTAMP 环境变量
+        run: echo "TIMESTAMP=${{ needs.update-feeds.outputs.timestamp }}" >> $GITHUB_ENV
 
       - name: 恢复 dl 缓存
         uses: actions/cache@v4
@@ -436,6 +506,24 @@ jobs:
     if: needs.check-upstream.outputs.changed == 'true'
     timeout-minutes: 300
     steps:
+      - name: 释放磁盘空间
+        run: df -h
+      - name: 清理无用工具缓存
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+
+      - name: Checkout 仓库（获取 init_build_environment.sh）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装编译依赖
+        run: |
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
         with:
@@ -456,6 +544,11 @@ jobs:
 
       - name: 赋予 node 执行权限
         run: chmod +x ${{ env.WORKING_DIRECTORY }}/staging_dir/host/bin/node
+
+      - name: 设置 CURRENT_HASH 环境变量
+        run: echo "CURRENT_HASH=${{ needs.update-feeds.outputs.commit_hash }}" >> $GITHUB_ENV
+      - name: 设置 TIMESTAMP 环境变量
+        run: echo "TIMESTAMP=${{ needs.update-feeds.outputs.timestamp }}" >> $GITHUB_ENV
 
       - name: 恢复 dl 缓存
         uses: actions/cache@v4
@@ -509,6 +602,24 @@ jobs:
     if: needs.check-upstream.outputs.changed == 'true'
     timeout-minutes: 300
     steps:
+      - name: 释放磁盘空间
+        run: df -h
+      - name: 清理无用工具缓存
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift /usr/local/julia* /usr/lib/jvm /usr/local/.ghcup /usr/local/share/chromium /usr/share/dotnet /usr/local/lib/android
+
+      - name: Checkout 仓库（获取 init_build_environment.sh）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装编译依赖
+        run: |
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+          sudo -E bash "$GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/init_build_environment.sh"
+
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
         with:
@@ -526,6 +637,11 @@ jobs:
         with:
           name: openwrt-packages
           path: ${{ env.WORKING_DIRECTORY }}/bin/packages/
+
+      - name: 设置 CURRENT_HASH 环境变量
+        run: echo "CURRENT_HASH=${{ needs.update-feeds.outputs.commit_hash }}" >> $GITHUB_ENV
+      - name: 设置 TIMESTAMP 环境变量
+        run: echo "TIMESTAMP=${{ needs.update-feeds.outputs.timestamp }}" >> $GITHUB_ENV
 
       - name: 恢复 dl 缓存（可选）
         uses: actions/cache@v4
