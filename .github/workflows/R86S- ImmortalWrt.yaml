@@ -212,7 +212,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [check-upstream, update-feeds]
     if: needs.check-upstream.outputs.changed == 'true'
-    timeout-minutes: 60
+    timeout-minutes: 300
     steps:
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
@@ -253,7 +253,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [check-upstream, update-feeds, build-llvm-bpf]
     if: needs.check-upstream.outputs.changed == 'true'
-    timeout-minutes: 180
+    timeout-minutes: 300
     steps:
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
@@ -318,7 +318,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [check-upstream, update-feeds, build-toolchain]
     if: needs.check-upstream.outputs.changed == 'true'
-    timeout-minutes: 180
+    timeout-minutes: 360
     steps:
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
@@ -375,7 +375,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [check-upstream, update-feeds, build-toolchain, build-node]
     if: needs.check-upstream.outputs.changed == 'true'
-    timeout-minutes: 240
+    timeout-minutes: 300
     steps:
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
@@ -437,7 +437,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [check-upstream, update-feeds, build-packages]
     if: needs.check-upstream.outputs.changed == 'true'
-    timeout-minutes: 120
+    timeout-minutes: 300
     steps:
       - name: 下载源码 artifact
         uses: actions/download-artifact@v4
