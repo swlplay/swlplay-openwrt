@@ -174,9 +174,7 @@ jobs:
           ls -la
           
           cp ${{ github.workspace }}/package/libffi/Makefile \
-             ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/Makefile
-
-          cd ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/
+             ${{ github.workspace }}/${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/Makefile
           ls -la
 
       - name: 复制自定义 package 覆盖
@@ -184,9 +182,8 @@ jobs:
           cd ${{ env.WORKING_DIRECTORY }}/package/feeds/
           ls -la
 
-          cp -r ${{ github.workspace }}/package/* ${{ env.WORKING_DIRECTORY }}/package/feeds/
+          cp -r ${{ github.workspace }}/package/* ${{ github.workspace }}/${{ env.WORKING_DIRECTORY }}/package/feeds/
 
-          cd ${{ env.WORKING_DIRECTORY }}/package/feeds/
           ls -la
 
       - name: 运行 make defconfig
@@ -199,8 +196,8 @@ jobs:
 
       - name: 记录磁盘空间使用（更新feeds后）
         run: |
-          echo "=== Job update-feeds 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job update-feeds 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 上传源码 artifact（包含 dl，供后续 job 使用）
@@ -247,12 +244,12 @@ jobs:
         if: steps.cache-llvm-bpf.outputs.cache-hit != 'true'
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          make tools/llvm-bpf/compile V=s
+          make tools/llvm-bpf/compile -j$(nproc) V=sc
 
       - name: 记录磁盘空间使用（LLVM BPF 编译后）
         run: |
-          echo "=== Job build-llvm-bpf 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job build-llvm-bpf 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 上传 LLVM BPF tarball（可选）
@@ -311,13 +308,13 @@ jobs:
       - name: 编译工具链和内核（每次都全新）
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          make toolchain/compile -j$(nproc)
-          make target/compile -j$(nproc)
+          make toolchain/compile -j$(nproc) V=sc
+          make target/compile -j$(nproc) V=sc
 
       - name: 记录磁盘空间使用（工具链编译后）
         run: |
-          echo "=== Job build-toolchain 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job build-toolchain 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 上传工具链 artifact
@@ -369,12 +366,12 @@ jobs:
         if: steps.cache-node.outputs.cache-hit != 'true'
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          make package/feeds/packages/node/compile V=s
+          make package/feeds/packages/node/compile -j$(nproc) V=sc
 
       - name: 记录磁盘空间使用（Node.js 编译后）
         run: |
-          echo "=== Job build-node 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job build-node 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 上传 Node.js 二进制 artifact
@@ -431,12 +428,12 @@ jobs:
       - name: 编译所有软件包（每次都全新）
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          make package/compile -j$(nproc) V=c
+          make package/compile -j$(nproc) V=sc
 
       - name: 记录磁盘空间使用（软件包编译后）
         run: |
-          echo "=== Job build-packages 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job build-packages 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 上传软件包 artifact
@@ -483,7 +480,7 @@ jobs:
       - name: 生成最终固件
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          make target/image.compile -j$(nproc) V=c
+          make target/image.compile -j$(nproc) V=sc
 
       - name: 上传固件 artifact（保留7天）
         uses: actions/upload-artifact@v4
@@ -519,8 +516,8 @@ jobs:
 
       - name: 记录磁盘空间使用（最终固件生成后）
         run: |
-          echo "=== Job build-firmware 完成 ===" >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
-          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> $GITHUB_WORKSPACE/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          echo "=== Job build-firmware 完成 ===" >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
+          du -sh ${{ env.WORKING_DIRECTORY }} | grep -oE '[0-9.]+[A-Z]' >> ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/space_usage-${{ env.TIMESTAMP }}.log
           df -h
 
       - name: 清理旧配置和空间使用记录文件（保留最近5个）
