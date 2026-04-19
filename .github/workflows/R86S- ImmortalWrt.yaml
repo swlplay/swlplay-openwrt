@@ -160,6 +160,8 @@ jobs:
       - name: 复制预定义配置
         run: |
           cp ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/R86S.config ${{ env.WORKING_DIRECTORY }}/.config
+          cd ${{ env.WORKING_DIRECTORY }}
+          ls -la
 
       - name: 移除不需要的 feeds 包
         run: |
@@ -168,17 +170,31 @@ jobs:
 
       - name: 替换 libffi Makefile
         run: |
+          cd ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/
+          ls -la
+          
           cp ${{ github.workspace }}/package/libffi/Makefile \
              ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/Makefile
 
+          cd ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/
+          ls -la
+
       - name: 复制自定义 package 覆盖
         run: |
+          cd ${{ env.WORKING_DIRECTORY }}/package/feeds/
+          ls -la
+
           cp -r ${{ github.workspace }}/package/* ${{ env.WORKING_DIRECTORY }}/package/feeds/
+
+          cd ${{ env.WORKING_DIRECTORY }}/package/feeds/
+          ls -la
 
       - name: 运行 make defconfig
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
           make defconfig
+          ls -la
+
       # ========== 自定义修改结束 ==========
 
       - name: 记录磁盘空间使用（更新feeds后）
