@@ -242,6 +242,12 @@ jobs:
           path: ${{ env.WORKING_DIRECTORY }}/staging_dir/
       - name: 设置环境变量
         run: |
+        
+          ls -la
+        
+          cd ${{ env.WORKING_DIRECTORY }}
+          ls -la
+          
           echo "CURRENT_HASH=${{ needs.prepare-and-build-toolchain.outputs.commit_hash }}" >> $GITHUB_ENV
           echo "TIMESTAMP=${{ needs.prepare-and-build-toolchain.outputs.timestamp }}" >> $GITHUB_ENV
       - name: 恢复 dl 缓存
@@ -265,6 +271,22 @@ jobs:
           find . -name "*.sh" -exec chmod +x {} \;
           if [ -d scripts ]; then chmod +x scripts/* 2>/dev/null || true; fi
           if [ -d staging_dir/host/bin ]; then chmod +x staging_dir/host/bin/* 2>/dev/null || true; fi
+      - name: 调试工件解压后的目录结构
+        run: |
+          echo "=== 查看 immortalwrt 根目录 ==="
+          ls -la ${{ env.WORKING_DIRECTORY }}/
+          echo "=== 查看 staging_dir 目录 ==="
+          ls -la ${{ env.WORKING_DIRECTORY }}/staging_dir/
+          echo "=== 查看 staging_dir/host/bin 目录 ==="
+          ls -la ${{ env.WORKING_DIRECTORY }}/staging_dir/host/bin/ | head -20
+          echo "=== 检查 gcc 是否在 staging_dir/host/bin 中 ==="
+          ls ${{ env.WORKING_DIRECTORY }}/staging_dir/host/bin/gcc* 2>/dev/null || echo "无 gcc"
+          echo "=== 当前 PATH ==="
+          echo $PATH
+          echo "=== which gcc ==="
+          which gcc || echo "gcc not in PATH"
+          echo "=== gcc --version ==="
+          gcc --version || echo "gcc 不可用"        
       - name: 编译 Node.js（缓存未命中时）
         if: steps.cache-node.outputs.cache-hit != 'true'
         run: |
