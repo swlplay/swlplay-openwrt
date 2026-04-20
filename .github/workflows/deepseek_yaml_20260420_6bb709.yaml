@@ -99,7 +99,5 @@ jobs:
           rm build-artifacts-stage1.tar.gz
 
       - name: Continue building packages and firmware
-        working-directory: source
-        run: |
-          # 继续编译所有软件包和最终固件
-          make -j$(nproc) V=s
+        working-directory: source   # <-- 关键修复
+        run: make -j$(nproc) V=s
