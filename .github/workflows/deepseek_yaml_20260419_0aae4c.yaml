@@ -140,16 +140,7 @@ jobs:
       - name: 复制预定义配置
         run: |
           cp ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/R86S.config ${{ env.WORKING_DIRECTORY }}/.config
-      - name: 移除不需要的 feeds 包
-        run: |
-          cd ${{ env.WORKING_DIRECTORY }}
-          ./scripts/feeds uninstall ddns-go smartdns qBittorrent-Enhanced-Edition luci-app-smartdns luci-app-openclash luci-app-qbittorrent luci-app-unblockneteasemusic luci-app-ddns-go
-      - name: 替换 libffi Makefile
-        run: |
-          cp ${{ github.workspace }}/package/libffi/Makefile ${{ env.WORKING_DIRECTORY }}/feeds/packages/libs/libffi/Makefile
-      - name: 复制自定义 package 覆盖
-        run: |
-          cp -r ${{ github.workspace }}/package/* ${{ env.WORKING_DIRECTORY }}/package/feeds/
+          
       - name: 运行 make defconfig
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
@@ -281,6 +272,19 @@ jobs:
           # rm -rf staging_dir/host/bin
           # 确保系统 PATH 优先
           echo "PATH=/usr/bin:$PATH" >> $GITHUB_ENV
+      
+      - name: 克隆 ImmortalWrt 源码
+        run: |
+          cd ${{ env.WORKING_DIRECTORY }}
+          rm -rf tmp
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          cp ${{ github.workspace }}/${{ env.CONFIG_HISTORY_DIR }}/R86S.config ${{ github.workspace }}/${{ env.WORKING_DIRECTORY }}/.config
+          
+      - name: 运行 make defconfig
+        run: |
+          cd ${{ env.WORKING_DIRECTORY }}
+          make defconfig 
           
       - name: 验证 gcc 路径
         run: |
