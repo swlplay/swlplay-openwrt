@@ -271,6 +271,22 @@ jobs:
           find . -name "*.sh" -exec chmod +x {} \;
           if [ -d scripts ]; then chmod +x scripts/* 2>/dev/null || true; fi
           if [ -d staging_dir/host/bin ]; then chmod +x staging_dir/host/bin/* 2>/dev/null || true; fi
+
+      - name: 移除工件中无效的编译器软链接
+        run: |
+          cd ${{ env.WORKING_DIRECTORY }}
+          # 删除 staging_dir/host/bin 下所有 gcc、g++ 相关的软链接
+          rm -f staging_dir/host/bin/gcc staging_dir/host/bin/g++ staging_dir/host/bin/cc staging_dir/host/bin/c++
+          # 或者更彻底：删除整个 host/bin 目录（保留也无妨，但删除更干净）
+          # rm -rf staging_dir/host/bin
+          # 确保系统 PATH 优先
+          echo "PATH=/usr/bin:$PATH" >> $GITHUB_ENV
+          
+      - name: 验证 gcc 路径
+        run: |
+         which gcc
+         gcc --version
+         
       - name: 调试工件解压后的目录结构
         run: |
           echo "=== 查看 immortalwrt 根目录 ==="
