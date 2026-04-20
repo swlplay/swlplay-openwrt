@@ -151,7 +151,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: immortalwrt-x86-64-images
-        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*squashfs-combined-efi.img.gz
+        path: ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*-quashfs-sysupgrade.bin
         retention-days: 7
         if-no-files-found: warn
 
@@ -243,7 +243,7 @@ jobs:
         # 精确匹配以 squashfs-combined-efi.img.gz 结尾的文件
         tag_name: x86_64-nightly
         files: |
-          ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*squashfs-combined-efi.img.gz
+          ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*-quashfs-sysupgrade.bin
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 

@@ -45,16 +45,12 @@ jobs:
       - name: Package essential build artifacts
         run: |
           cd source
-          # 关键修正：不再排除 *.a 静态库文件
           tar -czf ../build-artifacts-stage1.tar.gz \
-            --exclude='*.o' \
-            --exclude='*.la' \
-            --exclude='*.po' \
+            --exclude='build_dir/target-*/**/*.o' \
+            --exclude='build_dir/target-*/**/*.la' \
             --exclude='*.ipk' \
             --exclude='*.bin' \
             --exclude='*.elf' \
-            --exclude='staging_dir/target-*/pkginfo' \
-            --exclude='build_dir/target-*/root-*' \
             .
 
       - name: Upload artifacts for stage 2
