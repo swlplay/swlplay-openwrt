@@ -230,7 +230,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         # 精确匹配以 squashfs-combined-efi.img.gz 结尾的文件
-        tag_name: x86_64-nightly
+        tag_name: AX3600-nightly
         files: |
           ${{ env.WORKING_DIRECTORY }}/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/*-quashfs-sysupgrade.bin
       env:
