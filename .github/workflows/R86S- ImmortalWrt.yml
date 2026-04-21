@@ -97,22 +97,16 @@ jobs:
         
         ./scripts/feeds uninstall ddns-go smartdns qBittorrent-Enhanced-Edition luci-app-smartdns luci-app-openclash luci-app-qbittorrent luci-app-unblockneteasemusic luci-app-ddns-go
 
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
-        ls -la
-
 
         cp -r $GITHUB_WORKSPACE/package/* $GITHUB_WORKSPACE/$WORKING_DIRECTORY/package/feeds/
         
-
-        cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
-        ls -la
 
         echo "配置编译目标为 $TARGET/$SUBTARGET..."
         # 复制预定义的配置
         cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/
         ls -la
 
-        cp R86S1.config $GITHUB_WORKSPACE/$WORKING_DIRECTORY/.config
+        cp R86S.config $GITHUB_WORKSPACE/$WORKING_DIRECTORY/.config
         cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/                       
         ls -la
         
