@@ -100,11 +100,6 @@ jobs:
         cd $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/
         ls -la
 
-        cd $GITHUB_WORKSPACE/$CONFIG_HISTORY_DIR/libffi/
-        ls -la
-
-        cp Makefile $GITHUB_WORKSPACE/$WORKING_DIRECTORY/feeds/packages/libs/libffi/Makefile
-        ls -la
 
         cp -r $GITHUB_WORKSPACE/package/* $GITHUB_WORKSPACE/$WORKING_DIRECTORY/package/feeds/
         
@@ -222,7 +217,7 @@ jobs:
         git config user.name "swlplay"
         
         # 先拉取远程更改（避免冲突）
-        git pull --rebase origin main
+        git pull --rebase origin master
         
         # 添加配置目录（使用新的目录名）
         git add "$CONFIG_HISTORY_DIR/"
