@@ -1,5 +1,5 @@
  
-name: Monitor and Build ImmortalWrt (x86_64 Master)
+name: Build AX3600 ImmortalWrt
 
 on:
   # 定时触发：每周二18点检查更新（UTC时间）
